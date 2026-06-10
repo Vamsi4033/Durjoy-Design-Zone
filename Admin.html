@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ফায়ারবেস অ্যাডমিন | Durjoy Design Zone</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <style>
+        * { transition: all 0.2s ease; }
+        body { background: #f0f2f5; font-family: 'Inter', system-ui, sans-serif; }
+        .admin-card { background: white; border-radius: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s, box-shadow 0.2s; }
+        .admin-card:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.1); }
+        .category-tab { cursor: pointer; transition: all 0.2s; }
+        .category-tab.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        @media (max-width: 768px) { .admin-card { border-radius: 1rem; } }
+    </style>
+</head>
+<body>
+
+<script>
+    // ========== FIREBASE CONFIG (তোমার Config বসানো হয়েছে) ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyDhndiSoOCMFkUyAJ2kxFjrqzCco5hrKAU",
+        authDomain: "durjoy-design-zone.firebaseapp.com",
+        databaseURL: "https://durjoy-design-zone-default-rtdb.firebaseio.com",
+        projectId: "durjoy-design-zone",
+        storageBucket: "durjoy-design-zone.firebasestorage.app",
+        messagingSenderId: "869337957638",
+        appId: "1:869337957638:web:8c1a0c7dd38dc3b0bc4a87"
+    };
+
+    // Firebase Initialize
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    // লগইন স্টেট চেক
+    let isAdminLoggedIn = false;
+
+    function checkAuth() {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                isAdminLoggedIn = true;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('adminContent').classList.remove('hidden');
+                loadAllData();
+            } else {
+                isAdminLoggedIn = false;
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('adminContent').classList.add('hidden');
+            }
+        });
+    }
+
+    function loginWithPassword() {
+        const email = document.getElementById('adminEmail').value;
+        const password = document.getElementById('adminPassword').value;
+        if (!email || !password) {
+            alert("ইমেইল ও পাসওয়ার্ড দিন");
+            return;
+        }
+        document.getElementById('loginLoader').classList.remove('hidden');
+        auth.signInWithEmailAndPassword(email, password)
+            .then(() => {
+                document.getElementById('loginLoader').classList.add('hidden');
+                document.getElementById('loginError').classList.add('hidden');
+            })
+            .catch((error) => {
+                document.getElementById('loginLoader').classList.add('hidden');
+                document.getElementById('loginError').classList.remove('hidden');
+                document.getElementById('loginError').innerText = error.message;
+            });
+    }
+
+    function logout() {
+        auth.signOut().then(() => {
+            location.reload();
+        });
+    }
+
+    checkAuth();
+</script>
+
+<!-- লগইন স্ক্রিন -->
+<div id="loginScreen" class="fixed inset-0 bg-gradient-to-br from-purple-900 to-indigo-900 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+        <div class="text-center mb-6">
+            <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-crown text-white text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">অ্যাডমিন লগইন</h2>
+            <p class="text-gray-500 text-sm mt-1">Durjoy Design Zone</p>
+        </div>
+        <div class="space-y-4">
+            <input type="email" id="adminEmail" placeholder="admin@durjoy.com" class="w-full border rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500">
+            <input type="password" id="adminPassword" placeholder="পাসওয়ার্ড" class="w-full border rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500">
+            <button onclick="loginWithPassword()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition">
+                <span id="loginLoader" class="loading hidden mr-2"></span> লগইন করুন
+            </button>
+            <p id="loginError" class="text-red-500 text-sm text-center hidden"></p>
+        </div>
+        <div class="mt-6 text-center text-xs text-gray-400">
+            <p>🔥 Firebase Authentication ব্যবহার করুন</p>
+            <p class="mt-1">Email: admin@durjoy.com | Password: admin123456</p>
+        </div>
+    </div>
+</div>
+
+<!-- প্রধান অ্যাডমিন কন্টেন্ট -->
+<div id="adminContent" class="hidden">
+
+    <!-- Mobile Top Bar -->
+    <div class="md:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-50 px-4 py-3 flex justify-between items-center">
+        <h1 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-user-shield text-purple-600"></i> অ্যাডমিন</h1>
+        <div class="flex gap-2">
+            <button onclick="logout()" class="text-red-500 text-sm px-2"><i class="fa-solid fa-sign-out-alt"></i></button>
+            <button onclick="toggleMobileMenu()" class="text-2xl text-gray-600"><i id="mobileMenuIcon" class="fa-solid fa-bars"></i></button>
+        </div>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div id="mobileDrawer" class="fixed top-0 left-0 bottom-0 w-64 bg-white shadow-xl z-40 transform -translate-x-full transition-transform duration-300 md:hidden">
+        <div class="p-6 pt-20">
+            <div class="mb-6 pb-4 border-b text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fa-solid fa-crown text-white text-2xl"></i>
+                </div>
+                <h3 class="font-bold">Durjoy Zone</h3>
+            </div>
+            <nav class="space-y-2">
+                <a href="#profile" onclick="closeMobileMenu()" class="block px-4 py-2 rounded-lg hover:bg-purple-50"><i class="fa-solid fa-user mr-3 text-purple-600"></i> প্রোফাইল</a>
+                <a href="#logo" onclick="closeMobileMenu()" class="block px-4 py-2 rounded-lg hover:bg-purple-50"><i class="fa-solid fa-tag mr-3 text-purple-600"></i> লোগো</a>
+                <a href="#color" onclick="closeMobileMenu()" class="block px-4 py-2 rounded-lg hover:bg-purple-50"><i class="fa-solid fa-palette mr-3 text-purple-600"></i> থিম কালার</a>
+                <a href="#services" onclick="closeMobileMenu()" class="block px-4 py-2 rounded-lg hover:bg-purple-50"><i class="fa-solid fa-cogs mr-3 text-purple-600"></i> সার্ভিস</a>
+                <a href="#portfolio" onclick="closeMobileMenu()" class="block px-4 py-2 rounded-lg hover:bg-purple-50"><i class="fa-solid fa-folder-open mr-3 text-purple-600"></i> পোর্টফোলিও</a>
+                <a href="#contact" onclick="closeMobileMenu()" class="block px-4 py-2 rounded-lg hover:bg-purple-50"><i class="fa-solid fa-address-card mr-3 text-purple-600"></i> কন্টাক্ট</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Desktop Sidebar -->
+    <div class="flex min-h-screen">
+        <aside class="hidden md:block w-72 bg-white shadow-lg fixed h-full overflow-y-auto">
+            <div class="p-6">
+                <div class="text-center mb-8 pb-4 border-b">
+                    <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                        <i class="fa-solid fa-crown text-white text-3xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold">Durjoy Zone</h2>
+                    <p class="text-sm text-gray-500">ফায়ারবেস অ্যাডমিন</p>
+                    <button onclick="logout()" class="mt-3 text-sm text-red-500 hover:text-red-700"><i class="fa-solid fa-sign-out-alt"></i> লগআউট</button>
+                </div>
+                <nav class="space-y-2">
+                    <a href="#profile" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50"><i class="fa-solid fa-user w-5 text-purple-600"></i> প্রোফাইল</a>
+                    <a href="#logo" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50"><i class="fa-solid fa-tag w-5 text-blue-600"></i> লোগো</a>
+                    <a href="#color" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50"><i class="fa-solid fa-palette w-5 text-green-600"></i> থিম কালার</a>
+                    <a href="#services" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50"><i class="fa-solid fa-cogs w-5 text-orange-600"></i> সার্ভিস</a>
+                    <a href="#portfolio" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50"><i class="fa-solid fa-folder-open w-5 text-indigo-600"></i> পোর্টফোলিও</a>
+                    <a href="#contact" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50"><i class="fa-solid fa-address-card w-5 text-teal-600"></i> কন্টাক্ট</a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 md:ml-72 pt-16 md:pt-8">
+            <div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+
+                <!-- Profile Section -->
+                <div id="profile" class="admin-card p-6 scroll-mt-20">
+                    <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-user text-purple-600 mr-2"></i> প্রোফাইল সেটিংস</h2>
+                    <div class="flex flex-col md:flex-row gap-6 items-center">
+                        <img id="previewProfile" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" class="w-32 h-32 rounded-full object-cover border-4 border-purple-200">
+                        <div class="flex-1 w-full">
+                            <input type="text" id="profileImgUrl" placeholder="https://example.com/photo.jpg" class="w-full border rounded-xl px-4 py-3 mb-3">
+                            <button onclick="updateProfileImage()" class="bg-purple-600 text-white px-6 py-2.5 rounded-xl w-full md:w-auto">আপডেট</button>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4 mt-6">
+                        <div><label class="block text-sm font-medium mb-1">মালিকের নাম</label><input type="text" id="ownerName" class="w-full border rounded-xl px-4 py-2"></div>
+                        <div><label class="block text-sm font-medium mb-1">ব্র্যান্ড নাম</label><input type="text" id="brandName" class="w-full border rounded-xl px-4 py-2"></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium mb-1">হিরো সাবটাইটেল</label><input type="text" id="heroSubtitle" class="w-full border rounded-xl px-4 py-2"></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium mb-1">হিরো ডেসক্রিপশন</label><textarea id="heroDesc" rows="2" class="w-full border rounded-xl px-4 py-2"></textarea></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium mb-1">আমার সম্পর্কে</label><textarea id="aboutDesc" rows="3" class="w-full border rounded-xl px-4 py-2"></textarea></div>
+                        <div><label class="block text-sm font-medium mb-1">বছর অভিজ্ঞতা</label><input type="text" id="expYears" class="w-full border rounded-xl px-4 py-2"></div>
+                        <div><label class="block text-sm font-medium mb-1">ক্লায়েন্ট সংখ্যা</label><input type="text" id="clientsCount" class="w-full border rounded-xl px-4 py-2"></div>
+                    </div>
+                    <button onclick="updateProfileSettings()" class="mt-5 bg-purple-600 text-white px-6 py-2.5 rounded-xl">সব সেভ করুন</button>
+                </div>
+
+                <!-- Logo Section -->
+                <div id="logo" class="admin-card p-6 scroll-mt-20">
+                    <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-tag text-blue-600 mr-2"></i> লোগো টেক্সট</h2>
+                    <div class="bg-gray-100 p-4 rounded-xl text-center mb-4">
+                        <span id="previewLogo" class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-transparent bg-clip-text">Durjoy Design Zone</span>
+                    </div>
+                    <input type="text" id="logoText" placeholder="নতুন লোগো নাম" class="w-full border rounded-xl px-4 py-3 mb-3">
+                    <button onclick="updateLogo()" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl">আপডেট</button>
+                </div>
+
+                <!-- Theme Color -->
+                <div id="color" class="admin-card p-6 scroll-mt-20">
+                    <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-palette text-green-600 mr-2"></i> থিম কালার</h2>
+                    <div class="flex items-center gap-4">
+                        <input type="color" id="themeColorPicker" value="#7c3aed" class="w-20 h-12 rounded-lg border">
+                        <button onclick="updateThemeColor()" class="bg-green-600 text-white px-6 py-2.5 rounded-xl">সেভ করুন</button>
+                    </div>
+                </div>
+
+                <!-- Services Section -->
+                <div id="services" class="admin-card p-6 scroll-mt-20">
+                    <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-cogs text-orange-600 mr-2"></i> সার্ভিস ব্যবস্থাপনা</h2>
+
+                    <div class="flex flex-wrap gap-2 mb-6 border-b pb-3">
+                        <button onclick="selectServiceCategory('Thumbnail Design')" data-cat="Thumbnail Design" class="category-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 hover:bg-gray-200">🎬 YouTube Thumbnail</button>
+                        <button onclick="selectServiceCategory('T-Shirt Design')" data-cat="T-Shirt Design" class="category-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 hover:bg-gray-200">👕 T-Shirt Design</button>
+                        <button onclick="selectServiceCategory('Logo Design')" data-cat="Logo Design" class="category-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 hover:bg-gray-200">🎨 Logo Design</button>
+                        <button onclick="selectServiceCategory('Business Card Design')" data-cat="Business Card Design" class="category-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 hover:bg-gray-200">💳 Business Card</button>
+                        <button onclick="selectServiceCategory('Social Media Design')" data-cat="Social Media Design" class="category-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 hover:bg-gray-200">📱 Social Media</button>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-orange-50 to-red-50 p-5 rounded-xl mb-6">
+                        <h3 class="font-bold mb-3"><i class="fa-solid fa-plus-circle text-orange-600"></i> নতুন সার্ভিস যোগ করুন</h3>
+                        <input type="hidden" id="serviceCategory">
+                        <div class="grid md:grid-cols-2 gap-3">
+                            <input type="text" id="serviceTitle" placeholder="টাইটেল" class="border rounded-xl px-4 py-2">
+                            <input type="text" id="serviceIcon" placeholder="আইকন (fa-video)" class="border rounded-xl px-4 py-2">
+                            <input type="text" id="serviceDesc" placeholder="বিবরণ" class="border rounded-xl px-4 py-2 md:col-span-2">
+                            <input type="text" id="serviceImg" placeholder="ছবির URL" class="border rounded-xl px-4 py-2 md:col-span-2">
+                            <button onclick="addService()" class="bg-orange-600 text-white px-6 py-2 rounded-xl w-full md:w-auto">+ যোগ করুন</button>
+                        </div>
+                    </div>
+
+                    <div id="serviceList" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                </div>
+
+                <!-- Portfolio Section -->
+                <div id="portfolio" class="admin-card p-6 scroll-mt-20">
+                    <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-folder-open text-indigo-600 mr-2"></i> পোর্টফোলিও ব্যবস্থাপনা</h2>
+
+                    <div class="flex flex-wrap gap-2 mb-6 border-b pb-3">
+                        <button onclick="selectPortfolioCategory('All')" data-portcat="All" class="port-category-tab px-4 py-2 rounded-full text-sm font-medium bg-indigo-600 text-white">সব</button>
+                        <button onclick="selectPortfolioCategory('Thumbnail Design')" data-portcat="Thumbnail Design" class="port-category-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100">Thumbnail</button>
+                        <button onclick="selectPortfolioCategory('T-Shirt Design')" data-portcat="T-Shirt Design" class="port-category-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100">T-Shirt</button>
+                        <button onclick="selectPortfolioCategory('Logo Design')" data-portcat="Logo Design" class="port-category-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100">Logo</button>
+                        <button onclick="selectPortfolioCategory('Business Card Design')" data-portcat="Business Card Design" class="port-category-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100">Business Card</button>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-5 rounded-xl mb-6">
+                        <h3 class="font-bold mb-3"><i class="fa-solid fa-plus-circle text-indigo-600"></i> নতুন প্রজেক্ট যোগ করুন</h3>
+                        <div class="grid md:grid-cols-2 gap-3">
+                            <input type="text" id="portTitle" placeholder="প্রজেক্ট টাইটেল" class="border rounded-xl px-4 py-2">
+                            <select id="portCategory" class="border rounded-xl px-4 py-2">
+                                <option value="Thumbnail Design">🎬 YouTube Thumbnail</option>
+                                <option value="T-Shirt Design">👕 T-Shirt Design</option>
+                                <option value="Logo Design">🎨 Logo Design</option>
+                                <option value="Business Card Design">💳 Business Card Design</option>
+                            </select>
+                            <input type="text" id="portSize" placeholder="সাইজ" class="border rounded-xl px-4 py-2">
+                            <input type="text" id="portImg" placeholder="ছবির URL" class="border rounded-xl px-4 py-2 md:col-span-2">
+                            <button onclick="addPortfolio()" class="bg-indigo-600 text-white px-6 py-2 rounded-xl w-full md:w-auto">+ যোগ করুন</button>
+                        </div>
+                    </div>
+
+                    <div id="portfolioList" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                </div>
+
+                <!-- Contact Section -->
+                <div id="contact" class="admin-card p-6 scroll-mt-20">
+                    <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-address-card text-teal-600 mr-2"></i> কন্টাক্ট তথ্য</h2>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div><label class="block text-sm font-medium mb-1">ইমেইল</label><input type="email" id="contactEmail" class="w-full border rounded-xl px-4 py-2"></div>
+                        <div><label class="block text-sm font-medium mb-1">হোয়াটসঅ্যাপ</label><input type="text" id="contactWhatsapp" class="w-full border rounded-xl px-4 py-2"></div>
+                        <div><label class="block text-sm font-medium mb-1">ফেসবুক</label><input type="text" id="contactFacebook" class="w-full border rounded-xl px-4 py-2"></div>
+                        <div><label class="block text-sm font-medium mb-1">ফাইভার</label><input type="text" id="contactFiverr" class="w-full border rounded-xl px-4 py-2"></div>
+                    </div>
+                    <button onclick="updateContact()" class="mt-5 bg-teal-600 text-white px-6 py-2.5 rounded-xl">সেভ করুন</button>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    let currentServiceCat = 'Thumbnail Design';
+    let currentPortfolioCat = 'All';
+    let allServicesData = {};
+    let allPortfolioData = [];
+
+    // Firebase রেফারেন্স
+    const servicesRef = database.ref('services');
+    const portfolioRef = database.ref('portfolio');
+    const settingsRef = database.ref('settings');
+
+    function loadAllData() {
+        // Services Load
+        servicesRef.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                allServicesData = snapshot.val();
+            } else {
+                allServicesData = {
+                    'Thumbnail Design': [],
+                    'T-Shirt Design': [],
+                    'Logo Design': [],
+                    'Business Card Design': [],
+                    'Social Media Design': []
+                };
+            }
+            renderServiceList();
+        });
+
+        // Portfolio Load
+        portfolioRef.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                allPortfolioData = Array.isArray(data) ? data : Object.values(data);
+            } else {
+                allPortfolioData = [];
+            }
+            renderPortfolioList();
+        });
+
+        // Settings Load
+        settingsRef.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (data.profileImage) {
+                    document.getElementById('previewProfile').src = data.profileImage;
+                    document.getElementById('profileImgUrl').value = data.profileImage;
+                }
+                if (data.logoText) {
+                    document.getElementById('previewLogo').innerText = data.logoText;
+                    document.getElementById('logoText').value = data.logoText;
+                }
+                if (data.themeColor) {
+                    document.getElementById('themeColorPicker').value = data.themeColor;
+                }
+                if (data.ownerName) document.getElementById('ownerName').value = data.ownerName;
+                if (data.brandName) document.getElementById('brandName').value = data.brandName;
+                if (data.heroSubtitle) document.getElementById('heroSubtitle').value = data.heroSubtitle;
+                if (data.heroDescription) document.getElementById('heroDesc').value = data.heroDescription;
+                if (data.aboutDescription) document.getElementById('aboutDesc').value = data.aboutDescription;
+                if (data.experienceYears) document.getElementById('expYears').value = data.experienceYears;
+                if (data.clientsCount) document.getElementById('clientsCount').value = data.clientsCount;
+                if (data.contact) {
+                    document.getElementById('contactEmail').value = data.contact.email || '';
+                    document.getElementById('contactWhatsapp').value = data.contact.whatsapp || '';
+                    document.getElementById('contactFacebook').value = data.contact.facebook || '';
+                    document.getElementById('contactFiverr').value = data.contact.fiverr || '';
+                }
+            }
+        });
+
+        selectServiceCategory('Thumbnail Design');
+        selectPortfolioCategory('All');
+    }
+
+    function selectServiceCategory(cat) {
+        currentServiceCat = cat;
+        document.getElementById('serviceCategory').value = cat;
+        document.querySelectorAll('.category-tab').forEach(btn => {
+            if (btn.getAttribute('data-cat') === cat) {
+                btn.classList.add('active', 'bg-gradient-to-r', 'from-purple-600', 'to-indigo-600', 'text-white');
+                btn.classList.remove('bg-gray-100');
+            } else {
+                btn.classList.remove('active', 'bg-gradient-to-r', 'from-purple-600', 'to-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-100');
+            }
+        });
+        renderServiceList();
+    }
+
+    function renderServiceList() {
+        const services = allServicesData[currentServiceCat] || [];
+        const container = document.getElementById('serviceList');
+        if (services.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-400 py-8">কোন সার্ভিস নেই</div>';
+            return;
+        }
+        container.innerHTML = services.map((s, idx) => `
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-gray-50 p-4 rounded-xl">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid ${s.icon} text-purple-600"></i>
+                        <span class="font-bold">${s.title}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">${s.desc}</p>
+                    ${s.img ? `<img src="${s.img}" class="h-12 mt-2 rounded">` : ''}
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="editService(${idx})" class="text-blue-600 px-3 py-1 rounded-lg"><i class="fa-solid fa-edit"></i> Edit</button>
+                    <button onclick="deleteService(${idx})" class="text-red-600 px-3 py-1 rounded-lg"><i class="fa-solid fa-trash"></i> Delete</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function addService() {
+        let title = document.getElementById('serviceTitle').value;
+        let icon = document.getElementById('serviceIcon').value;
+        let desc = document.getElementById('serviceDesc').value;
+        let img = document.getElementById('serviceImg').value;
+        if (!title || !icon || !desc) {
+            alert("টাইটেল, আইকন ও বিবরণ দিতে হবে");
+            return;
+        }
+
+        let newService = {
+            id: Date.now(),
+            title,
+            icon,
+            desc,
+            img
+        };
+        if (!allServicesData[currentServiceCat]) allServicesData[currentServiceCat] = [];
+        allServicesData[currentServiceCat].push(newService);
+
+        servicesRef.child(currentServiceCat).set(allServicesData[currentServiceCat]);
+
+        document.getElementById('serviceTitle').value = '';
+        document.getElementById('serviceIcon').value = '';
+        document.getElementById('serviceDesc').value = '';
+        document.getElementById('serviceImg').value = '';
+    }
+
+    function editService(idx) {
+        let s = allServicesData[currentServiceCat][idx];
+        document.getElementById('serviceTitle').value = s.title;
+        document.getElementById('serviceIcon').value = s.icon;
+        document.getElementById('serviceDesc').value = s.desc;
+        document.getElementById('serviceImg').value = s.img || '';
+        allServicesData[currentServiceCat].splice(idx, 1);
+        servicesRef.child(currentServiceCat).set(allServicesData[currentServiceCat]);
+    }
+
+    function deleteService(idx) {
+        if (confirm("সার্ভিস ডিলিট করবেন?")) {
+            allServicesData[currentServiceCat].splice(idx, 1);
+            servicesRef.child(currentServiceCat).set(allServicesData[currentServiceCat]);
+        }
+    }
+
+    function selectPortfolioCategory(cat) {
+        currentPortfolioCat = cat;
+        document.querySelectorAll('.port-category-tab').forEach(btn => {
+            if (btn.getAttribute('data-portcat') === cat) {
+                btn.classList.add('bg-indigo-600', 'text-white');
+                btn.classList.remove('bg-gray-100');
+            } else {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-100');
+            }
+        });
+        renderPortfolioList();
+    }
+
+    function renderPortfolioList() {
+        let filtered = currentPortfolioCat === 'All' ? allPortfolioData : allPortfolioData.filter(p => p.category === currentPortfolioCat);
+        const container = document.getElementById('portfolioList');
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-400 py-8">কোন প্রজেক্ট নেই</div>';
+            return;
+        }
+        container.innerHTML = filtered.map(p => `
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-gray-50 p-4 rounded-xl">
+                <div class="flex-1">
+                    <img src="${p.img}" class="w-16 h-16 rounded-lg object-cover inline mr-3">
+                    <span class="font-bold">${p.title}</span>
+                    <span class="text-xs bg-indigo-100 px-2 py-1 rounded ml-2">${p.category}</span>
+                    <p class="text-xs text-gray-500 mt-1">${p.size}</p>
+                </div>
+                <button onclick="deletePortfolioItem(${p.id})" class="text-red-600 px-3 py-1 rounded-lg"><i class="fa-solid fa-trash"></i> Delete</button>
+            </div>
+        `).join('');
+    }
+
+    function addPortfolio() {
+        let title = document.getElementById('portTitle').value;
+        let category = document.getElementById('portCategory').value;
+        let size = document.getElementById('portSize').value;
+        let img = document.getElementById('portImg').value;
+        if (!title || !category || !size || !img) {
+            alert("সব ফিল্ড পূরণ করুন");
+            return;
+        }
+        let newItem = {
+            id: Date.now(),
+            title,
+            category,
+            size,
+            img
+        };
+        allPortfolioData.push(newItem);
+        portfolioRef.set(allPortfolioData);
+        document.getElementById('portTitle').value = '';
+        document.getElementById('portSize').value = '';
+        document.getElementById('portImg').value = '';
+    }
+
+    function deletePortfolioItem(id) {
+        if (confirm("প্রজেক্ট ডিলিট করবেন?")) {
+            allPortfolioData = allPortfolioData.filter(p => p.id !== id);
+            portfolioRef.set(allPortfolioData);
+        }
+    }
+
+    function updateProfileImage() {
+        let url = document.getElementById('profileImgUrl').value;
+        if (url) {
+            settingsRef.child('profileImage').set(url);
+            document.getElementById('previewProfile').src = url;
+            alert("আপডেট হয়েছে");
+        }
+    }
+
+    function updateProfileSettings() {
+        const updates = {
+            ownerName: document.getElementById('ownerName').value,
+            brandName: document.getElementById('brandName').value,
+            heroSubtitle: document.getElementById('heroSubtitle').value,
+            heroDescription: document.getElementById('heroDesc').value,
+            aboutDescription: document.getElementById('aboutDesc').value,
+            experienceYears: document.getElementById('expYears').value,
+            clientsCount: document.getElementById('clientsCount').value
+        };
+        settingsRef.update(updates).then(() => alert("প্রোফাইল আপডেট হয়েছে!"));
+    }
+
+    function updateLogo() {
+        let logo = document.getElementById('logoText').value;
+        if (logo) {
+            settingsRef.child('logoText').set(logo);
+            document.getElementById('previewLogo').innerText = logo;
+            alert("আপডেট হয়েছে");
+        }
+    }
+
+    function updateThemeColor() {
+        let color = document.getElementById('themeColorPicker').value;
+        settingsRef.child('themeColor').set(color);
+        alert("থিম কালার সেভ হয়েছে");
+    }
+
+    function updateContact() {
+        let contact = {
+            email: document.getElementById('contactEmail').value,
+            whatsapp: document.getElementById('contactWhatsapp').value,
+            facebook: document.getElementById('contactFacebook').value,
+            fiverr: document.getElementById('contactFiverr').value
+        };
+        settingsRef.child('contact').set(contact);
+        alert("কন্টাক্ট সেভ হয়েছে");
+    }
+
+    // মোবাইল মেনু
+    function toggleMobileMenu() {
+        let drawer = document.getElementById('mobileDrawer');
+        let icon = document.getElementById('mobileMenuIcon');
+        if (drawer.classList.contains('-translate-x-full')) {
+            drawer.classList.remove('-translate-x-full');
+            icon.classList.remove('fa-bars');
+            icon.classList.add('fa-times');
+        } else {
+            drawer.classList.add('-translate-x-full');
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+        }
+    }
+
+    function closeMobileMenu() {
+        document.getElementById('mobileDrawer').classList.add('-translate-x-full');
+        document.getElementById('mobileMenuIcon').classList.remove('fa-times');
+        document.getElementById('mobileMenuIcon').classList.add('fa-bars');
+    }
+</script>
+</body>
+</html>

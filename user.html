@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Durjoy Design Zone | MD Syaf Islam - Graphic Design Portfolio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; overflow-x: hidden; }
+        .font-display { font-family: 'Outfit', sans-serif; }
+        
+        :root { --brand-color: #00cc44; --brand-secondary: #059669; }
+        .bg-brand { background-color: var(--brand-color); }
+        .text-brand { color: var(--brand-color); }
+        .border-brand { border-color: var(--brand-color); }
+        .bg-brand\/10 { background-color: rgba(0, 204, 68, 0.1); }
+        
+        .bg-dot-pattern {
+            background-image: radial-gradient(circle, rgba(99, 102, 241, 0.08) 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+        
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-15px) scale(1.02); }
+        }
+        @keyframes float-slower {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(12px) rotate(2deg); }
+        }
+        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+        @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        
+        .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
+        .animate-float-slower { animation: float-slower 12s ease-in-out infinite; }
+        .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+        .animate-bounce-slow { animation: bounce-slow 3s ease-in-out infinite; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .filter-btn.active { background-color: #0f172a !important; color: white !important; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        
+        .btn-send {
+            transition: all 0.3s ease;
+        }
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 204, 68, 0.3);
+        }
+        .btn-send:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loadingScreen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="text-center">
+        <div class="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-slate-500 font-medium">Loading creative assets...</p>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div id="mainContent" style="display: none;">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 sm:h-20">
+                <div class="flex items-center gap-3 group cursor-pointer">
+                    <i class="fa-solid fa-crown text-2xl" style="color: var(--brand-color)"></i>
+                    <div>
+                        <h1 id="brandName" class="font-display font-extrabold text-base sm:text-lg tracking-tight">Durjoy Design Zone</h1>
+                        <p class="text-[9px] text-slate-500 font-mono tracking-wider">BY <span id="ownerName">MD SYAF ISLAM</span></p>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center gap-7">
+                    <a href="#about" class="font-semibold text-slate-600 hover:text-brand text-sm transition-colors">About</a>
+                    <a href="#services" class="font-semibold text-slate-600 hover:text-brand text-sm transition-colors">Services</a>
+                    <a href="#portfolio" class="font-semibold text-slate-600 hover:text-brand text-sm transition-colors">Portfolio</a>
+                    <a href="#contact" class="font-semibold text-slate-600 hover:text-brand text-sm transition-colors">Contact</a>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="#portfolio" class="md:hidden px-3 py-1.5 text-xs font-bold text-white bg-brand rounded-xl">Graphics</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen pt-28 pb-20 flex flex-col justify-center bg-gradient-to-b from-slate-50 via-white to-slate-50 bg-dot-pattern overflow-hidden">
+        <div class="absolute top-12 left-12 w-96 h-96 bg-brand/10 rounded-full blur-3xl animate-float-slow"></div>
+        <div class="absolute bottom-12 right-12 w-[30rem] h-[30rem] bg-brand/10 rounded-full blur-3xl animate-float-slower"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <div class="lg:col-span-7 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand/10 text-brand font-bold text-[11px] tracking-wider uppercase mb-6">
+                        <i class="fa-solid fa-circle-check"></i> Verified Professional Designer
+                    </div>
+                    <h1 class="font-display font-extrabold text-4xl sm:text-6xl lg:text-7xl leading-tight tracking-tight text-slate-900">
+                        Hello, I am <span id="heroName" class="text-brand">MD Syaf Islam</span>
+                    </h1>
+                    <div class="h-1.5 w-40 bg-gradient-to-r from-brand to-brand-secondary rounded-full my-4 mx-auto lg:mx-0"></div>
+                    <p id="heroSubtitle" class="font-display font-bold text-xl sm:text-2xl text-slate-700">Professional Graphic Designer</p>
+                    <div class="flex flex-wrap justify-center lg:justify-start gap-2.5 mt-4">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-medium"><i class="fa-solid fa-tv text-red-500"></i> Thumbnail Expert</span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-medium"><i class="fa-solid fa-tshirt text-teal-400"></i> T-Shirt Artist</span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-medium"><i class="fa-solid fa-fire text-amber-500"></i> Logo Creator</span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-medium"><i class="fa-solid fa-layer-group text-blue-400"></i> Corporate Card</span>
+                    </div>
+                    <div class="flex flex-wrap gap-3 mt-6 justify-center lg:justify-start">
+                        <a href="#portfolio" class="px-6 py-3 bg-brand text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">Portfolio Gallery</a>
+                        <a href="#contact" class="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-all">Send Message</a>
+                    </div>
+                </div>
+                <div class="lg:col-span-5 flex justify-center">
+                    <div class="relative group">
+                        <div class="absolute -inset-4 bg-gradient-to-tr from-brand to-brand-secondary rounded-full blur-2xl opacity-30 group-hover:opacity-50 transition"></div>
+                        <div class="absolute -inset-6 border border-dashed border-brand/30 rounded-full animate-spin-slow"></div>
+                        <div class="absolute -top-3 -right-3 bg-white border border-slate-200 p-2.5 rounded-2xl shadow-xl flex items-center gap-2 animate-float-slow z-20">
+                            <div class="w-8 h-8 bg-amber-50 text-amber-500 rounded-lg flex items-center justify-center"><i class="fa-solid fa-award"></i></div>
+                            <div><span class="text-[10px] font-bold text-slate-500 block">EXPERIENCE</span><span id="expYears" class="text-xs font-bold">3+ Years</span></div>
+                        </div>
+                        <div class="absolute bottom-10 -left-6 bg-white border border-slate-200 p-2.5 rounded-2xl shadow-xl flex items-center gap-2 animate-float-slower z-20">
+                            <div class="w-8 h-8 bg-emerald-50 text-brand rounded-lg flex items-center justify-center"><i class="fa-solid fa-circle-check"></i></div>
+                            <div><span class="text-[10px] font-bold text-slate-500 block">FEEDBACK</span><span class="text-xs font-extrabold">100% Happy</span></div>
+                        </div>
+                        <div class="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-80 lg:h-80 rounded-full border-[6px] border-white bg-slate-100 shadow-2xl overflow-hidden z-10">
+                            <img id="profileImage" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300" alt="Profile" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1.5">
+                                <div class="w-2 h-2 bg-brand rounded-full animate-pulse"></div>
+                                <span class="text-[10px] font-bold uppercase font-mono">STATUS: ONLINE</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="max-w-4xl mx-auto mt-16 glass-card rounded-3xl p-6 shadow-xl text-center lg:text-left flex flex-col lg:flex-row items-center justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold text-brand tracking-wider uppercase flex items-center gap-1 justify-center lg:justify-start"><i class="fa-solid fa-sparkles animate-spin-slow"></i> OUR VISUAL PHILOSOPHY</span>
+                    <p id="heroDesc" class="text-slate-600 text-sm leading-relaxed mt-2">Welcome to my creative portfolio. I am MD Syaf Islam, a passionate Graphic Designer who transforms ideas into visually compelling designs.</p>
+                </div>
+                <div class="flex gap-3">
+                    <a href="#portfolio" class="px-6 py-3 bg-brand text-white font-bold rounded-xl shadow-md hover:shadow-lg transition">Portfolio</a>
+                    <a href="#contact" class="px-6 py-3 bg-white text-slate-700 font-bold rounded-xl border shadow-sm hover:bg-slate-50 transition">Message</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-xs font-bold text-brand tracking-wider uppercase">WHO IS DURJOY DESIGN ZONE?</span>
+                <h2 class="font-display font-extrabold text-3xl sm:text-4xl mt-2">Pristine Aesthetics & Vector Mastery</h2>
+                <div class="h-1 w-20 bg-brand rounded-full mx-auto mt-3"></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center max-w-5xl mx-auto">
+                <div class="lg:col-span-5 grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 rounded-3xl p-6 text-center hover:shadow-md transition">
+                        <i class="fa-solid fa-award text-3xl text-brand mb-2"></i>
+                        <p class="font-display font-bold text-3xl"><span id="statExp">3</span>+</p>
+                        <p class="text-xs text-slate-500">Years Experience</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-3xl p-6 text-center hover:shadow-md transition">
+                        <i class="fa-solid fa-smile text-3xl text-brand mb-2"></i>
+                        <p class="font-display font-bold text-3xl"><span id="statClients">200</span>+</p>
+                        <p class="text-xs text-slate-500">Happy Clients</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-3xl p-6 text-center hover:shadow-md transition">
+                        <i class="fa-solid fa-folder-open text-3xl text-brand mb-2"></i>
+                        <p class="font-display font-bold text-3xl"><span id="statProjects">500</span>+</p>
+                        <p class="text-xs text-slate-500">Projects Done</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-3xl p-6 text-center hover:shadow-md transition">
+                        <i class="fa-solid fa-clock text-3xl text-brand mb-2"></i>
+                        <p class="font-display font-bold text-3xl">24/7</p>
+                        <p class="text-xs text-slate-500">Support</p>
+                    </div>
+                </div>
+                <div class="lg:col-span-7">
+                    <h3 class="font-display font-bold text-2xl">Creative Vision & Precision Craft</h3>
+                    <p id="aboutDesc" class="text-slate-600 leading-relaxed mt-4">I am MD Syaf Islam, an ultra-focused Creative Visual Designer with a sharp eye for aesthetic value and current market trends. Through Durjoy Design Zone, I help brands stand out with original concept designs, cohesive typography selections, and master-level print preparations.</p>
+                    <div class="flex flex-wrap gap-2 mt-6">
+                        <span class="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-xs font-mono font-bold">#PhotoshopProfessional</span>
+                        <span class="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-xs font-mono font-bold">#VectorArtist</span>
+                        <span class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 text-xs font-mono font-bold">#ApparelDesignMaster</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="text-xs font-bold text-brand tracking-wider uppercase">HIGH-PERFORMANCE TOOLKIT</span>
+                <h2 class="font-display font-extrabold text-3xl sm:text-4xl mt-2">Expertise in Leading Design Platforms</h2>
+                <div class="h-1 w-20 bg-brand rounded-full mx-auto mt-3"></div>
+            </div>
+            <div id="skillsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto"></div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="text-xs font-bold text-brand tracking-wider uppercase">PROFESSIONAL DIRECTIVES</span>
+                <h2 class="font-display font-extrabold text-3xl sm:text-4xl mt-2">High-Value Design Solutions Built for Conversion</h2>
+                <div class="h-1 w-20 bg-brand rounded-full mx-auto mt-3"></div>
+            </div>
+            <div id="servicesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto"></div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section id="portfolio" class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="text-xs font-bold text-brand tracking-wider uppercase">VISUAL MASTERPIECES</span>
+                <h2 class="font-display font-extrabold text-3xl sm:text-4xl mt-2">A Studio Tour of Executed Graphic Wonders</h2>
+                <div class="h-1 w-20 bg-brand rounded-full mx-auto mt-3"></div>
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 mb-8">
+                <button data-filter="all" class="filter-btn px-5 py-2 rounded-full text-sm font-medium bg-white text-slate-600 hover:bg-slate-100 transition-all active">All</button>
+                <button data-filter="Thumbnail Design" class="filter-btn px-5 py-2 rounded-full text-sm font-medium bg-white text-slate-600 hover:bg-slate-100 transition-all">Thumbnail</button>
+                <button data-filter="T-Shirt Design" class="filter-btn px-5 py-2 rounded-full text-sm font-medium bg-white text-slate-600 hover:bg-slate-100 transition-all">T-Shirt</button>
+                <button data-filter="Logo Design" class="filter-btn px-5 py-2 rounded-full text-sm font-medium bg-white text-slate-600 hover:bg-slate-100 transition-all">Logo</button>
+                <button data-filter="Business Card Design" class="filter-btn px-5 py-2 rounded-full text-sm font-medium bg-white text-slate-600 hover:bg-slate-100 transition-all">Business Card</button>
+            </div>
+            <div id="portfolioGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="loadMoreContainer" class="text-center mt-8"></div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-white">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="text-xs font-bold text-brand tracking-wider uppercase">GET IN TOUCH</span>
+                <h2 class="font-display font-extrabold text-3xl sm:text-4xl mt-2">Let's Launch Your Brand's Visual Transformation</h2>
+                <div class="h-1 w-20 bg-brand rounded-full mx-auto mt-3"></div>
+                <p class="text-slate-600 mt-4 max-w-2xl mx-auto">Whether you need high-conversion YouTube thumbnails, apparel line prints, corporate business cards, or brand identity packages, I am here to help you dominate your market.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                    <a id="contactEmailLink" href="#" class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl hover:bg-brand/5 transition group">
+                        <div class="w-12 h-12 bg-red-100 text-red-500 rounded-xl flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition"><i class="fa-solid fa-envelope text-xl"></i></div>
+                        <div><p class="text-xs text-slate-400 font-mono">DIRECT EMAIL ADDRESS</p><p id="contactEmail" class="font-semibold">loading...</p></div>
+                    </a>
+                    <a id="contactWALink" href="#" target="_blank" class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl hover:bg-green-50 transition group">
+                        <div class="w-12 h-12 bg-green-100 text-green-500 rounded-xl flex items-center justify-center group-hover:bg-green-500 group-hover:text-white transition"><i class="fa-brands fa-whatsapp text-xl"></i></div>
+                        <div><p class="text-xs text-slate-400 font-mono">WHATSAPP SUPPORT</p><p id="contactWhatsapp" class="font-semibold">loading...</p></div>
+                    </a>
+                    <a id="contactFBLink" href="#" target="_blank" class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl hover:bg-blue-50 transition group">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"><i class="fa-brands fa-facebook text-xl"></i></div>
+                        <div><p class="text-xs text-slate-400 font-mono">FACEBOOK PAGE</p><p id="contactFacebook" class="font-semibold">loading...</p></div>
+                    </a>
+                    <a id="contactFiverrLink" href="#" target="_blank" class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 transition group">
+                        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition">
+                            <i class="fa-brands fa-fiverr text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-mono">FIVERR SHOP</p>
+                            <p id="contactFiverr" class="font-semibold">Fiverr Portfolio</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-2xl">
+                    <h3 class="font-display font-bold text-xl mb-4 flex items-center gap-2">
+                        <i class="fa-regular fa-paper-plane text-brand"></i> 
+                        Direct Inquiry Submission
+                    </h3>
+                    <form id="contactForm" class="space-y-4">
+                        <input type="text" id="msgName" placeholder="Your Full Name" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand" required>
+                        <input type="email" id="msgEmail" placeholder="Official Email Address" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand" required>
+                        <select id="msgTopic" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand">
+                            <option value="Inquiry">General Inquiry</option>
+                            <option value="Logo Design">Logo Design</option>
+                            <option value="T-Shirt Design">T-Shirt Design</option>
+                            <option value="Business Card Design">Business Card Design</option>
+                            <option value="Thumbnail Design">Thumbnail Design</option>
+                        </select>
+                        <textarea id="msgMessage" rows="4" placeholder="Enter Brief Description & Size Specs..." class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand resize-none" required></textarea>
+                        <button type="submit" class="btn-send w-full py-3.5 bg-gradient-to-r from-brand to-brand-secondary text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3 group">
+                            <i class="fa-regular fa-paper-plane text-white text-base transition-transform group-hover:translate-x-1 group-hover:-translate-y-0.5"></i>
+                            <span>Send Inquiry</span>
+                        </button>
+                    </form>
+                    <p class="text-[10px] text-slate-400 text-center mt-4 font-mono">Your message will be sent directly to MD Syaf Islam</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p id="footerBrand" class="font-display font-bold text-xl">Durjoy Design Zone</p>
+            <p class="text-slate-400 text-sm mt-2">Premium artwork & graphic layout creations.</p>
+            <div class="flex justify-center gap-6 mt-4">
+                <a id="footerWA" href="#" target="_blank" class="text-slate-400 hover:text-green-400 transition"><i class="fa-brands fa-whatsapp text-xl"></i></a>
+                <a id="footerFB" href="#" target="_blank" class="text-slate-400 hover:text-blue-400 transition"><i class="fa-brands fa-facebook text-xl"></i></a>
+                <a id="footerFiverr" href="#" target="_blank" class="text-slate-400 hover:text-emerald-400 transition"><i class="fa-brands fa-fiverr text-xl"></i></a>
+                <a id="footerEmail" href="#" class="text-slate-400 hover:text-red-400 transition"><i class="fa-solid fa-envelope text-xl"></i></a>
+            </div>
+            <p class="text-slate-500 text-xs mt-6">© 2024 Durjoy Design Zone. All Rights Reserved.</p>
+        </div>
+    </footer>
+</div>
+
+<script>
+    // Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyDhndiSoOCMFkUyAJ2kxFjrqzCco5hrKAU",
+        authDomain: "durjoy-design-zone.firebaseapp.com",
+        databaseURL: "https://durjoy-design-zone-default-rtdb.firebaseio.com",
+        projectId: "durjoy-design-zone",
+        storageBucket: "durjoy-design-zone.firebasestorage.app",
+        messagingSenderId: "869337957638",
+        appId: "1:869337957638:web:8c1a0c7dd38dc3b0bc4a87"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    
+    // Default Static Data
+    const defaultSkills = [
+        { name: "Adobe Photoshop", icon: "fa-layer-group", level: "Expert (95%)", desc: "Multi-layered raster image modification, background extraction, and product presentation designs.", color: "from-sky-700 to-blue-500" },
+        { name: "Adobe Illustrator", icon: "fa-pen-fancy", level: "Expert (92%)", desc: "Vector designs, custom product emblems, detailed geometric emblems, and ready-to-print typography shapes.", color: "from-amber-600 to-orange-400" },
+        { name: "Canva Pro", icon: "fa-th", level: "Proficient (90%)", desc: "Fast wireframes, content templates, social flyers, and customized brand outlines.", color: "from-indigo-600 to-purple-400" },
+        { name: "T-Shirt & Apparel Design", icon: "fa-tshirt", level: "Expert (96%)", desc: "Graphic typography schemes, apparel compositions, screen-print color separated layouts.", color: "from-emerald-600 to-green-400" },
+        { name: "Business Card Design", icon: "fa-id-card", level: "Expert (94%)", desc: "Symmetric vector assets, dual layouts, high DPI printing preparations and tactile texture advice.", color: "from-blue-700 to-indigo-500" },
+        { name: "Logo Design & Identity", icon: "fa-expand", level: "Expert (91%)", desc: "Visual emblem conceptualization, font pairings, visual brand guides, and target demographics research.", color: "from-rose-600 to-pink-500" },
+        { name: "Social Media Graphics", icon: "fa-share-alt", level: "Expert (93%)", desc: "High CTR covers, viral campaign banners, custom dynamic templates, and brand colors representation.", color: "from-cyan-600 to-teal-400" },
+        { name: "Visual Branding Coordination", icon: "fa-briefcase", level: "Proficient (88%)", desc: "Complete asset portfolios, corporate guidelines, typography manuals, and standard branding kits.", color: "from-violet-600 to-fuchsia-400" }
+    ];
+    
+    const defaultServices = [
+        { id: 1, title: "Premium T-Shirt Design", icon: "fa-tshirt", desc: "Creative, high-impact concepts for your apparel brand, optimized ready-to-print structures on vector files of professional premium standards.", features: ["Ultra-crisp 2K Quality Renders", "High resolution 300 DPI print files", "Vector source formats (AI, EPS, SVG)", "3D beautiful mockup display preview"] },
+        { id: 2, title: "Elite Brand Logo & Guidelines", icon: "fa-compass", desc: "Sleek and memorable custom brand logos that represent your visual identity perfectly to clients and target markets.", features: ["Premium 2K Ultra HD Quality Renders", "Completely original, custom shapes", "Transparent PNG high-resolution files", "Full ownership and source files"] },
+        { id: 3, title: "Modern Premium Business Cards", icon: "fa-id-card", desc: "Double-sided premium business print material styled elegantly with clean minimalism and professional look.", features: ["Excellent 2K UHD Quality layout", "Standard 3.5x2 inch layouts", "Print-ready high-contrast CMYK profiles", "Layered source PSD/AI exports"] },
+        { id: 4, title: "Clickable Content Video Thumbnails", icon: "fa-tv", desc: "High readability, dynamic social media banners and thumbnails that boost CTR and attract viewership on multiple networks.", features: ["Ultra-crisp 2K QHD (1440p) outputs", "Optimal readable font selection", "Color grading & asset synthesis", "Engaging graphics tailored to your niche"] }
+    ];
+    
+    const defaultPortfolio = [
+        { id: 1, title: "Gaming Thumbnail Design", category: "Thumbnail Design", size: "1920x1080px (16:9)", img: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=600" },
+        { id: 2, title: "Vintage T-Shirt Mockup", category: "T-Shirt Design", size: "4500x5400px (300 DPI)", img: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600" },
+        { id: 3, title: "Tech Logo Concept", category: "Logo Design", size: "3000x3000px (Vector)", img: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600" },
+        { id: 4, title: "Luxury Business Card", category: "Business Card Design", size: "3.5x2 inches (Double-Sided)", img: "https://images.unsplash.com/photo-1547989453-11e67ffb3885?w=600" }
+    ];
+    
+    let portfolioItems = [...defaultPortfolio];
+    let currentFilter = "all";
+    let visibleCount = 6;
+    
+    // Load all data from Firebase
+    function loadFirebaseData() {
+        database.ref('settings').once('value').then(snapshot => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (data.logoText) document.getElementById('brandName').innerText = data.logoText;
+                if (data.ownerName) {
+                    document.getElementById('ownerName').innerText = data.ownerName.toUpperCase();
+                    document.getElementById('heroName').innerText = data.ownerName;
+                }
+                if (data.heroSubtitle) document.getElementById('heroSubtitle').innerText = data.heroSubtitle;
+                if (data.heroDescription) document.getElementById('heroDesc').innerText = data.heroDescription;
+                if (data.aboutDescription) document.getElementById('aboutDesc').innerText = data.aboutDescription;
+                if (data.profileImage) document.getElementById('profileImage').src = data.profileImage;
+                if (data.experienceYears) {
+                    document.getElementById('expYears').innerText = data.experienceYears + " Years";
+                    document.getElementById('statExp').innerText = data.experienceYears.replace('+', '');
+                }
+                if (data.clientsCount) document.getElementById('statClients').innerText = data.clientsCount.replace('+', '');
+                if (data.themeColor) {
+                    document.documentElement.style.setProperty('--brand-color', data.themeColor);
+                    document.documentElement.style.setProperty('--brand-secondary', data.themeColor);
+                }
+                if (data.contact) {
+                    if (data.contact.email) {
+                        document.getElementById('contactEmail').innerText = data.contact.email;
+                        document.getElementById('contactEmailLink').href = 'mailto:' + data.contact.email;
+                        document.getElementById('footerEmail').href = 'mailto:' + data.contact.email;
+                    }
+                    if (data.contact.whatsapp) {
+                        let wa = data.contact.whatsapp.replace(/[^0-9]/g, '');
+                        document.getElementById('contactWhatsapp').innerText = data.contact.whatsapp;
+                        document.getElementById('contactWALink').href = 'https://wa.me/' + wa;
+                        document.getElementById('footerWA').href = 'https://wa.me/' + wa;
+                    }
+                    if (data.contact.facebook) {
+                        document.getElementById('contactFacebook').innerText = "Facebook Page";
+                        document.getElementById('contactFBLink').href = data.contact.facebook;
+                        document.getElementById('footerFB').href = data.contact.facebook;
+                    }
+                    if (data.contact.fiverr) {
+                        document.getElementById('contactFiverr').innerText = "Fiverr Portfolio";
+                        document.getElementById('contactFiverrLink').href = data.contact.fiverr;
+                        document.getElementById('footerFiverr').href = data.contact.fiverr;
+                    }
+                }
+            }
+        }).catch(console.error);
+        
+        database.ref('skills').once('value').then(snapshot => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const skills = Array.isArray(data) ? data : Object.values(data);
+                if (skills.length > 0) renderSkills(skills);
+                else renderSkills(defaultSkills);
+            } else {
+                renderSkills(defaultSkills);
+            }
+        }).catch(() => renderSkills(defaultSkills));
+        
+        database.ref('services').once('value').then(snapshot => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const allServices = [];
+                for (let cat in data) {
+                    if (Array.isArray(data[cat])) {
+                        allServices.push(...data[cat]);
+                    }
+                }
+                if (allServices.length > 0) renderServices(allServices);
+                else renderServices(defaultServices);
+            } else {
+                renderServices(defaultServices);
+            }
+        }).catch(() => renderServices(defaultServices));
+        
+        database.ref('portfolio').once('value').then(snapshot => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const items = Array.isArray(data) ? data : Object.values(data);
+                if (items.length > 0) {
+                    portfolioItems = items;
+                    document.getElementById('statProjects').innerText = items.length;
+                } else {
+                    portfolioItems = defaultPortfolio;
+                    document.getElementById('statProjects').innerText = defaultPortfolio.length;
+                }
+            } else {
+                portfolioItems = defaultPortfolio;
+                document.getElementById('statProjects').innerText = defaultPortfolio.length;
+            }
+            renderPortfolio();
+        }).catch(() => {
+            portfolioItems = defaultPortfolio;
+            renderPortfolio();
+        });
+    }
+    
+    function renderSkills(skills) {
+        const container = document.getElementById('skillsGrid');
+        container.innerHTML = skills.map(skill => `
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-lg transition-all group">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr ${skill.color} flex items-center justify-center text-white shadow-md">
+                        <i class="fa-solid ${skill.icon} text-xl"></i>
+                    </div>
+                    <span class="text-xs font-bold text-brand bg-brand/10 px-2.5 py-1 rounded-full">${skill.level}</span>
+                </div>
+                <h3 class="font-display font-bold text-lg mb-1 group-hover:text-brand transition">${skill.name}</h3>
+                <p class="text-slate-600 text-xs leading-relaxed">${skill.desc}</p>
+            </div>
+        `).join('');
+    }
+    
+    function renderServices(services) {
+        const container = document.getElementById('servicesGrid');
+        container.innerHTML = services.map((service, idx) => `
+            <div class="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all relative overflow-hidden group" style="animation-delay: ${idx * 0.1}s">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brand/5 rounded-full blur-2xl"></div>
+                <div class="absolute top-5 right-5 bg-gradient-to-r from-brand/10 to-brand/10 text-brand font-mono text-[10px] font-black px-3 py-1.5 rounded-xl border border-brand/20 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 bg-brand rounded-full animate-pulse"></span> 2K QUALITY
+                </div>
+                <div class="w-14 h-14 bg-brand/10 text-brand rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-white transition">
+                    <i class="fa-solid ${service.icon} text-2xl"></i>
+                </div>
+                <h3 class="font-display font-bold text-xl mb-2 group-hover:text-brand transition">${service.title}</h3>
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">${service.desc}</p>
+                <div class="space-y-2 pt-4 border-t border-slate-100">
+                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Package Inclusions</span>
+                    <div class="grid grid-cols-1 gap-1.5">
+                        ${service.features.slice(0, 4).map(f => `<div class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-emerald-500 text-sm"></i><span>${f}</span></div>`).join('')}
+                    </div>
+                </div>
+                <div class="mt-6 pt-3 flex justify-between items-center">
+                    <a href="https://wa.me/8801764033900?text=Hello, I want to inquire about "${service.title}" service." target="_blank" class="text-xs font-bold text-brand hover:underline flex items-center gap-1">
+                        Book via WhatsApp <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                    <span class="text-[10px] font-mono text-slate-400">Durjoy Design Zone</span>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function renderPortfolio() {
+        const container = document.getElementById('portfolioGrid');
+        let filtered = currentFilter === 'all' ? portfolioItems : portfolioItems.filter(p => p.category === currentFilter);
+        let visible = filtered.slice(0, visibleCount);
+        
+        if (visible.length === 0) {
+            container.innerHTML = '<div class="col-span-full text-center text-slate-400 py-10">No portfolio items found. Add some via admin panel!</div>';
+            document.getElementById('loadMoreContainer').innerHTML = '';
+            return;
+        }
+        
+        container.innerHTML = visible.map(item => `
+            <div class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+                <div class="aspect-video overflow-hidden">
+                    <img src="${item.img}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600'">
+                </div>
+                <div class="p-5">
+                    <span class="text-xs font-bold text-brand uppercase tracking-wider">${item.category || 'Design'}</span>
+                    <h3 class="font-display font-bold text-lg mt-1 group-hover:text-brand transition">${item.title}</h3>
+                    <p class="text-slate-500 text-sm mt-1">${item.size || 'Standard Size'}</p>
+                    <a href="https://wa.me/8801764033900?text=I'm interested in your design: ${item.title}" target="_blank" class="mt-3 block w-full text-center bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition">Order on WhatsApp</a>
+                </div>
+            </div>
+        `).join('');
+        
+        const loadMoreContainer = document.getElementById('loadMoreContainer');
+        if (filtered.length > visibleCount) {
+            loadMoreContainer.innerHTML = '<button onclick="loadMore()" class="px-6 py-3 bg-slate-900 text-white font-semibold rounded-xl hover:bg-brand transition">Load More Designs</button>';
+        } else {
+            loadMoreContainer.innerHTML = '';
+        }
+    }
+    
+    function loadMore() {
+        visibleCount += 6;
+        renderPortfolio();
+    }
+    
+    function setupFilters() {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'bg-slate-900', 'text-white'));
+                this.classList.add('active', 'bg-slate-900', 'text-white');
+                currentFilter = this.getAttribute('data-filter');
+                visibleCount = 6;
+                renderPortfolio();
+            });
+        });
+        document.querySelector('.filter-btn[data-filter="all"]').classList.add('active', 'bg-slate-900', 'text-white');
+    }
+    
+    function setupContactForm() {
+        const form = document.getElementById('contactForm');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('msgName').value;
+                const email = document.getElementById('msgEmail').value;
+                const topic = document.getElementById('msgTopic').value;
+                const message = document.getElementById('msgMessage').value;
+                
+                database.ref('inquiries').push({
+                    id: Date.now(),
+                    name, email, topic, message,
+                    date: new Date().toISOString(),
+                    status: 'unread'
+                }).then(() => {
+                    alert('✓ Your message has been sent successfully! I will contact you soon.');
+                    form.reset();
+                }).catch(err => {
+                    alert('✗ Failed to send message. Please try again.');
+                });
+            });
+        }
+    }
+    
+    function setupSmoothScroll() {
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href === '#') return;
+                const target = document.querySelector(href);
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    }
+    
+    window.onload = () => {
+        loadFirebaseData();
+        setTimeout(() => {
+            setupFilters();
+            setupContactForm();
+            setupSmoothScroll();
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }, 800);
+    };
+</script>
+
+</body>
+</html>
