@@ -1,2 +1,1 @@
-# Durjoy-Design-Zone
-opirtorutipev
+# Durjoy-Design-Zone  
