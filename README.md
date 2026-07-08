@@ -1,12 +1,3 @@
 # Durjoy-Design-Zone
- l;rkgokparokr[aofj'p[ep-]=jrenjkan[pp
- pokf[ksjf'p
- ;hjfioskop[zjhfio
- ]lifj'pooojfouii[pserlj.;ikse
- jposzorp[fvjk.fp
- '
- kfpxkfo
- [pJfike
- kokifr
- [-seor'
- akr'oa-pedjsajpkipij
+ slkfjl;asliedjk;alikdlalsie laliiejiljlkjsd;djkjfk;kjsdjisekjkiejkldsjsjfk;a ufiekfjdjjfioesj;kljkldjfkdiejdj;akfiekj;fjkikhajkjdkhjkfdjkf;jeik;j
+ ijkj;kjjl;kjl;jksiejkkdlsajiejlakj;ijaie;ekjjiuejkaa9aejjeikjeieul;
